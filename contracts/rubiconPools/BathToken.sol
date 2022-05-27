@@ -251,6 +251,12 @@ contract BathToken {
         bathHouse = newBathHouse;
     }
 
+    // Added by warden @sseefried
+    function setBathBuddy(address _bathBuddy) external onlyBathHouse {
+        rewardsVestingWallet = IBathBuddy(_bathBuddy);
+    }
+
+
     /// @notice Admin-only function to approve Bath Token's RubiconMarketAddress with the maximum integer value (infinite approval)
     function approveMarket() external onlyBathHouse {
         underlyingToken.approve(RubiconMarketAddress, 2**256 - 1);

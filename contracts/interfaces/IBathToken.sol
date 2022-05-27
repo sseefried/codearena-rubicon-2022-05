@@ -43,6 +43,9 @@ interface IBathToken is IERC20 {
 
     function setBonusToken(address newBonusToken) external;
 
+    // Added by warden @sseefried
+    function setBathBuddy(address bathBuddy) external;
+
     function setFeeBPS(uint256 _feeBPS) external;
 
     function setFeeTo(address _feeTo) external;

@@ -290,6 +290,12 @@ contract BathHouse {
         IBathToken(bathToken).setMarket(newMarket);
     }
 
+    // Added by warden @sseefried
+    function setBathTokenBathBuddy(address bathToken, address _bathBuddy) external onlyAdmin {
+        IBathToken(bathToken).setBathBuddy(_bathBuddy);
+    }
+
+
     /// @notice Admin-only function to add a bonus token to a Bath Token's reward schema
     function setBonusToken(address bathToken, address newBonusToken)
         external
