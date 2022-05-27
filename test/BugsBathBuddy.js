@@ -52,7 +52,7 @@ contract("Bath Token", (accounts) => {
       logIndented("getting this pair", pair);
       bathPairInstance = await BathPair.at(pair);
     });
-    it("Fees accrued are incorrectly included in vestedAmount calculation", async () => {
+    it("Minnow bob gets most of the fees paid by whale Alice", async () => {
       // Deploy an arbitrary ERC-20 with a custom name and decimals
       const newCoinSymbol = "TEST";
       let newCoin = await TokenWithFaucet.new(
