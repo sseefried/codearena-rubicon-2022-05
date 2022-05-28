@@ -65,8 +65,14 @@ contract("Bath Token", (accounts) => {
       let admin = accounts[0];
       let alice = accounts[1];
       let bob = accounts[2];
-      let aliceAmount = 199.99 * 10**8;
+      let feeBps = 50;
+      let aliceAmount = 200 * 10**8;
       let bobAmount   = 0.01   * 10**8;
+
+      let withDec = (bn) => {
+        return bn.toNumber() / 10**8;
+      }
+
 
       await newCoin.approve(bathHouseInstance.address, 1000 * 10**8, { from: admin });
       await newCoin.transfer(alice, aliceAmount, { from: admin });
@@ -91,7 +97,6 @@ contract("Bath Token", (accounts) => {
       let bathTokenSymbol = await bathToken.symbol();
       let block = await web3.eth.getBlock('latest');
 
-
       await newCoin.approve(bathToken.address, 1000 * 10**8, { from: admin });
       await newCoin.approve(bathToken.address, aliceAmount, { from: alice });
       await newCoin.approve(bathToken.address, bobAmount, { from: bob });
@@ -99,11 +104,12 @@ contract("Bath Token", (accounts) => {
       // beneficiary = bathToken.address
       let bathBuddy = await BathBuddy.new(bathToken.address, block.timestamp, 365 * 86400);
 
+      /* Remove interference from whale/minnow exploit in BathToken */
+      bathHouseInstance.setBathTokenFeeTo(bathToken.address, accounts[3]);
 
       await bathHouseInstance.setBonusToken(bathToken.address, newCoin.address);
       await bathHouseInstance.setBathTokenBathBuddy(bathToken.address, bathBuddy.address);
 
-      let feeBps = 5;
       await bathHouseInstance.setBathTokenFeeBPS(bathToken.address, feeBps);
 
       let initBathBuddyTokens = aliceAmount + bobAmount;
@@ -113,49 +119,29 @@ contract("Bath Token", (accounts) => {
       await bathToken.deposit(aliceAmount, alice, { from: alice });
       await bathToken.deposit(bobAmount, bob, { from: bob });
 
-      console.log("alice shares", (await bathToken.balanceOf(alice)).toString());
-      console.log("bob shares", (await bathToken.balanceOf(alice)).toString());
-      console.log("total shares", (await bathToken.totalSupply()).toString());
-      console.log("bath buddy tokens", (await newCoin.balanceOf(bathBuddy.address)).toString());
+      console.log("alice shares", withDec(await bathToken.balanceOf(alice)));
+      console.log("bob shares", withDec(await bathToken.balanceOf(bob)));
+      console.log("total shares", withDec(await bathToken.totalSupply()));
+      console.log("bath buddy tokens", withDec(await newCoin.balanceOf(bathBuddy.address)));
 
       helper.advanceTime(365*86400); // advance time by one year
-      console.log("alice before tokens", (await newCoin.balanceOf(alice)).toString());
-      console.log("bob before tokens", (await newCoin.balanceOf(bob)).toString());
       await bathToken.withdraw(aliceAmount, { from: alice} );
-      console.log("alice after tokens", (await newCoin.balanceOf(alice)).toString());
-      console.log("vested (which incorrectly included fees from Alice's withdrawal!)", (await bathBuddy.vestedAmount(newCoin.address, (await web3.eth.getBlock('latest')).timestamp)).toString());
-      console.log("bath buddy tokens left before bob withdraw", (await newCoin.balanceOf(bathBuddy.address)).toString());
+      console.log("alice after tokens", withDec(await newCoin.balanceOf(alice)));
+      console.log("vested (which incorrectly included fees from Alice's withdrawal!)", 
+        withDec(await bathBuddy.vestedAmount(newCoin.address, (await web3.eth.getBlock('latest')).timestamp)));
+      console.log("bathToken totalSupply", (await bathToken.totalSupply()).toString());
+      console.log("bath buddy tokens left before bob withdraw", withDec(await newCoin.balanceOf(bathBuddy.address)));
       await bathToken.withdraw(bobAmount, { from: bob} );
 
       let bobsTokensAfter = await newCoin.balanceOf(bob);
-      console.log("bob after tokens", bobsTokensAfter.toString());
-
-      console.log("bob return ", (bobsTokensAfter.toNumber()  - bobAmount) /  bobAmount);
+      console.log("bob tokens after withdraw", withDec(bobsTokensAfter));
 
       // Error is that fees get included into the `vestedAmount`
 
-      console.log("actual bath buddy tokens", (await newCoin.balanceOf(bathBuddy.address)).toString());
-      console.log("correct bath buddy tokens", correctFeesAtEnd);
+      console.log("actual bath buddy tokens", withDec(await newCoin.balanceOf(bathBuddy.address)));
+      console.log("correct bath buddy tokens", correctFeesAtEnd / 10**8);
 
     });
   });
 });
 
-/*
-
-   We want to get R > V
-
-   However, R = V  * f (where f < 1)
-
-   So this is impossible! 
-
-   a + b = 1
-   vested = T + T * a * f  = T (1 + a*f)
-   b*a*T*f
-
-   1/2 * 1/2 * 200 * 0.05%
-
-
-
-
-*/

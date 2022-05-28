@@ -95,7 +95,6 @@ contract("Bath Token", (accounts) => {
           return bn.toNumber() / 10**8;
       }
 
-
       await newCoin.approve(bathToken.address, 1000 * 10**8, { from: admin });
       await newCoin.approve(bathToken.address, whaleAmount, { from: whale });
       await newCoin.approve(bathToken.address, minnowAmount, { from: minnow });
@@ -110,7 +109,6 @@ contract("Bath Token", (accounts) => {
 
       console.log("feeTo            ", await bathToken.feeTo());
       console.log("bathToken address", bathToken.address);
-
 
       /* 
        * Uncommenting the following line will prevent the minnow getting such a disproportionate
